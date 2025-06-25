@@ -1,7 +1,8 @@
-import { LoginForm } from "@/components/auth/login-form"
+// app/auth/login/page.tsx
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { LoginForm } from "@/components/auth/login-form"
 
 export default async function LoginPage() {
   const supabase = createServerComponentClient({ cookies })
@@ -11,7 +12,15 @@ export default async function LoginPage() {
   } = await supabase.auth.getSession()
 
   if (session) {
-    redirect("/admin")
+    const { data: adminUser } = await supabase
+      .from("admin_users")
+      .select("is_super_admin")
+      .eq("id", session.user.id)
+      .single()
+
+    if (adminUser?.is_super_admin) {
+      redirect("/admin/dashboard")
+    }
   }
 
   return (
@@ -27,4 +36,5 @@ export default async function LoginPage() {
       </div>
     </div>
   )
-} 
+}
+
