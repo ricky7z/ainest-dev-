@@ -1,4 +1,4 @@
-"use client"
+{/* "use client"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -114,3 +114,4 @@ export default function AdminPage() {
     </div>
   )
 }
+*/}
