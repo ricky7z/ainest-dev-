@@ -17,7 +17,11 @@ import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-export function LoginForm() {
+interface LoginFormProps {
+  redirectedFrom?: string
+}
+
+export function LoginForm({ redirectedFrom }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -30,7 +34,7 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -39,12 +43,31 @@ export function LoginForm() {
         throw error
       }
 
+      // Check if user is super admin
+      const { data: adminUser, error: userError } = await supabase
+        .from("admin_users")
+        .select("is_super_admin, is_active")
+        .eq("id", data.user.id)
+        .single()
+
+      if (userError || !adminUser || !adminUser.is_active || !adminUser.is_super_admin) {
+        await supabase.auth.signOut()
+        throw new Error("You do not have super admin access.")
+      }
+
+      toast({
+        title: "Success",
+        description: "Login successful! Redirecting to dashboard...",
+      })
+
+      // Redirect to the original destination or dashboard
+      const redirectPath = redirectedFrom || "/admin/dashboard"
+      router.push(redirectPath)
       router.refresh()
-      router.push("/admin")
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Invalid email or password",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       })
     } finally {

@@ -25,7 +25,6 @@ import {
   Home,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAdmin } from "@/contexts/admin-context"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { AdminUser } from "@/lib/supabase"
@@ -37,12 +36,15 @@ interface AdminNavigationProps {
 export function AdminNavigation({ user }: AdminNavigationProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { logout } = useAdmin()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleLogout = async () => {
-    await logout()
-    router.push("/admin")
+    // Use the signout route instead of the old context
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/auth/signout'
+    document.body.appendChild(form)
+    form.submit()
   }
 
   const isSuperAdmin = user?.is_super_admin || user?.role === 'super_admin'
@@ -50,7 +52,7 @@ export function AdminNavigation({ user }: AdminNavigationProps) {
   const navigation = [
     {
       name: "Dashboard",
-      href: "/admin",
+      href: "/admin/dashboard",
       icon: Home,
       exact: true
     },
@@ -108,7 +110,7 @@ export function AdminNavigation({ user }: AdminNavigationProps) {
     <nav className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r bg-card">
       <div className="flex-1 flex flex-col min-h-0 pt-5">
         <div className="flex items-center flex-shrink-0 px-4">
-          <Link href="/admin" className="font-bold text-2xl">
+          <Link href="/admin/dashboard" className="font-bold text-2xl">
             Admin
           </Link>
         </div>
